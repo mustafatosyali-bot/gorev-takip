@@ -304,6 +304,17 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   </div>
 </div>
 
+<!-- INSTALL BANNER -->
+<div id="installBanner" style="display:none;position:fixed;bottom:calc(var(--nh) + var(--sb) + 12px);left:16px;right:76px;background:var(--card);border:1px solid var(--teal);border-radius:14px;padding:12px 14px;display:none;align-items:center;gap:10px;z-index:48;box-shadow:0 4px 20px rgba(20,184,166,.2)">
+  <div style="font-size:18px">📱</div>
+  <div style="flex:1;min-width:0">
+    <div style="font-size:13px;font-weight:700">Ana Ekrana Ekle</div>
+    <div style="font-size:11px;color:var(--text2)">Uygulama gibi kullanın</div>
+  </div>
+  <button onclick="installApp()" style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;padding:7px 14px;border-radius:10px;background:var(--teal);border:none;color:#0a0a0f;cursor:pointer;white-space:nowrap">Kur</button>
+  <button onclick="this.parentElement.style.display='none'" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:0 4px">×</button>
+</div>
+
 <!-- BOTTOM NAV - PERSONEL -->
 <nav class="bn" id="staffNav">
   <div class="ni active" id="nav-tasks" onclick="switchScreen('sc-tasks')">
@@ -499,11 +510,43 @@ function showLogin(){
   document.getElementById("loginScreen").classList.add("show");
 }
 
+let deferredInstallPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  // Show install banner after login
+  setTimeout(()=>{
+    const banner=document.getElementById("installBanner");
+    if(banner)banner.style.display="flex";
+  },3000);
+});
+window.addEventListener("appinstalled",()=>{
+  const banner=document.getElementById("installBanner");
+  if(banner)banner.style.display="none";
+  toast("Uygulama kuruldu! 🎉","green");
+});
+
+window.installApp=async function(){
+  if(deferredInstallPrompt){
+    deferredInstallPrompt.prompt();
+    const{outcome}=await deferredInstallPrompt.userChoice;
+    if(outcome==="accepted"){
+      document.getElementById("installBanner").style.display="none";
+      toast("Uygulama ana ekrana eklendi!","green");
+    }
+    deferredInstallPrompt=null;
+  } else {
+    toast("Tarayıcı menüsünden 'Ana Ekrana Ekle' seçin","blue");
+  }
+};
+
 function showApp(){
   hideSplash();
   document.getElementById("loginScreen").classList.remove("show");
   const btn=document.getElementById("lBtn");if(btn){btn.textContent="Giriş Yap";btn.disabled=false;}
   updateUserUI();
+  // Request notification permission
+  setTimeout(()=>requestNotifPermission(),2000);
   if(isAdmin){
     document.getElementById("staffNav").style.display="none";
     document.getElementById("adminNav").style.display="flex";
@@ -1001,6 +1044,8 @@ window.submitFinish=async()=>{
   qs.forEach((q,i)=>{answers[q]=document.getElementById(`eqA${i}`).value.trim();});
   await update(ref(db,`tasks/${activeTaskId}`),{completed:true,completedAt:Date.now(),endAnswers:answers,photos:finishPhotos});
   cs("finishSheet");toast("Görev tamamlandı! ✓","green");
+  const tName=allTasks[activeTaskId]?.title||"";
+  sendNotification("✅ Görev Tamamlandı",`"${tName}" başarıyla tamamlandı!`);
 };
 
 // ── UTILS ────────────────────────────────────────────────
@@ -1025,12 +1070,47 @@ window.toast=(msg,type="green")=>{
   document.getElementById("tw").appendChild(el);setTimeout(()=>el.remove(),3200);
 };
 
-// Service worker disabled to prevent cache issues
 if("serviceWorker"in navigator){
-  navigator.serviceWorker.getRegistrations().then(regs=>{
-    regs.forEach(reg=>reg.unregister());
+  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
+
+// ── NOTIFICATIONS ──────────────────────────────────────
+async function requestNotifPermission(){
+  if(!("Notification"in window))return false;
+  if(Notification.permission==="granted")return true;
+  const p=await Notification.requestPermission();
+  return p==="granted";
+}
+
+window.sendNotification=async function(title,body){
+  const ok=await requestNotifPermission();
+  if(!ok)return;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    reg.showNotification(title,{
+      body,
+      icon:"./icon-192.png",
+      badge:"./icon-192.png",
+      vibrate:[200,100,200],
+      tag:Date.now().toString(),
+    });
+  }catch(e){
+    new Notification(title,{body,icon:"./icon-192.png"});
+  }
+};
+
+// Check overdue tasks every minute
+function checkOverdueTasks(){
+  if(!currentUser||isAdmin)return;
+  const myTasks=Object.values(allTasks).filter(t=>t.assignedTo===currentUser.uid);
+  myTasks.forEach(t=>{
+    if(isOD(t)&&!t._notified){
+      t._notified=true;
+      sendNotification("⚠️ Gecikmiş Görev",`"${t.title}" son tarihi geçti!`);
+    }
   });
 }
+setInterval(checkOverdueTasks,60000);
 </script>
 </body>
 </html>
