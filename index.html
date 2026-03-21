@@ -271,8 +271,10 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
       </div>
     </div>
   </div>
-  <!-- FILTER TABS -->
-  <div style="display:flex;gap:8px;padding:10px 16px;overflow-x:auto;scrollbar-width:none;flex-shrink:0" id="adminFilters"></div>
+  <!-- STATS STRIP -->
+  <div class="ss" id="adminStatsStrip"></div>
+  <!-- FILTER TABS (personel) -->
+  <div style="display:flex;gap:8px;padding:4px 16px 10px;overflow-x:auto;scrollbar-width:none;flex-shrink:0" id="adminFilters"></div>
   <div class="sa" style="padding:0 16px;">
     <div id="adminTaskList" style="padding-top:4px;"></div>
   </div>
@@ -598,19 +600,25 @@ async function saveCurrentUser(){
 // ── RENDER STAFF ──────────────────────────────────────────
 window.renderStaff=function renderStaff(){
   if(!currentUser)return;
-  const myTasks=Object.values(allTasks).filter(t=>t.assignedTo===currentUser.uid);
-  const done=myTasks.filter(t=>t.completed).length;
-  const started=myTasks.filter(t=>t.started&&!t.completed).length;
-  const pending=myTasks.filter(t=>!t.started&&!t.completed).length;
-  const overdue=myTasks.filter(t=>isOD(t)).length;
+  let myTasks=Object.values(allTasks).filter(t=>t.assignedTo===currentUser.uid);
+  const allMyTasks=myTasks;
+  if(staffFilter==="bekliyor") myTasks=myTasks.filter(t=>!t.started&&!t.completed);
+  else if(staffFilter==="devam") myTasks=myTasks.filter(t=>t.started&&!t.completed);
+  else if(staffFilter==="tamamlandı") myTasks=myTasks.filter(t=>t.completed);
+  else if(staffFilter==="gecikmiş") myTasks=myTasks.filter(t=>isOD(t));
+  const allForStats=allMyTasks;
+  const done=allForStats.filter(t=>t.completed).length;
+  const started=allForStats.filter(t=>t.started&&!t.completed).length;
+  const pending=allForStats.filter(t=>!t.started&&!t.completed).length;
+  const overdue=allForStats.filter(t=>isOD(t)).length;
 
   document.getElementById("staffStats").innerHTML=[
-    {v:myTasks.length,l:"Toplam",c:"var(--accent)"},
-    {v:pending,l:"Bekliyor",c:"var(--purple)"},
-    {v:started,l:"Devam",c:"var(--blue)"},
-    {v:done,l:"Tamamlandı",c:"var(--green)"},
-    {v:overdue,l:"Gecikmiş",c:"var(--red)"},
-  ].map(s=>`<div class="sp"><div class="spv" style="color:${s.c}">${s.v}</div><div class="spl">${s.l}</div></div>`).join("");
+    {v:myTasks.length,l:"Toplam",c:"var(--accent)",f:"tümü"},
+    {v:pending,l:"Bekliyor",c:"var(--purple)",f:"bekliyor"},
+    {v:started,l:"Devam",c:"var(--blue)",f:"devam"},
+    {v:done,l:"Tamamlandı",c:"var(--green)",f:"tamamlandı"},
+    {v:overdue,l:"Gecikmiş",c:"var(--red)",f:"gecikmiş"},
+  ].map(s=>`<div class="sp" onclick="setStaffFilter('${s.f}')" style="cursor:pointer;border:1px solid ${s.c}33"><div class="spv" style="color:${s.c}">${s.v}</div><div class="spl">${s.l}</div></div>`).join("");
 
   const list=document.getElementById("staffTaskList");
   if(!myTasks.length){
@@ -661,11 +669,11 @@ window.renderAssigned=function renderAssigned(){
   const started=myAssigned.filter(t=>t.started&&!t.completed).length;
   const pending=myAssigned.filter(t=>!t.started&&!t.completed).length;
   document.getElementById("assignedStats").innerHTML=[
-    {v:myAssigned.length,l:"Toplam",c:"var(--accent)"},
-    {v:pending,l:"Bekliyor",c:"var(--purple)"},
-    {v:started,l:"Devam",c:"var(--blue)"},
-    {v:done,l:"Tamamlandı",c:"var(--green)"},
-  ].map(s=>`<div class="sp"><div class="spv" style="color:${s.c}">${s.v}</div><div class="spl">${s.l}</div></div>`).join("");
+    {v:myAssigned.length,l:"Toplam",c:"var(--accent)",f:"tümü"},
+    {v:pending,l:"Bekliyor",c:"var(--purple)",f:"bekliyor"},
+    {v:started,l:"Devam",c:"var(--blue)",f:"devam"},
+    {v:done,l:"Tamamlandı",c:"var(--green)",f:"tamamlandı"},
+  ].map(s=>`<div class="sp" onclick="setAdminFilter('${s.f}')" style="cursor:pointer;border:1px solid ${s.c}33"><div class="spv" style="color:${s.c}">${s.v}</div><div class="spl">${s.l}</div></div>`).join("");
 
   const list=document.getElementById("assignedTaskList");
   if(!myAssigned.length){
@@ -711,12 +719,31 @@ function renderAdminFilters(){
 
 window.setAdminFilter=f=>{adminFilter=f;renderAdmin();};
 
+let staffFilter="tümü";
+window.setStaffFilter=function(f){
+  staffFilter=f;
+  renderStaff();
+};
+
 window.renderAdmin=function renderAdmin(){
   renderAdminFilters();
+  // Render stats strip
+  const allTasks2=Object.values(allTasks);
+  const adminStatsEl=document.getElementById("adminStatsStrip");
+  if(adminStatsEl){
+    adminStatsEl.innerHTML=[
+      {v:allTasks2.length,l:"Toplam",c:"var(--accent)",f:"tümü"},
+      {v:allTasks2.filter(t=>!t.started&&!t.completed).length,l:"Bekliyor",c:"var(--purple)",f:"bekliyor"},
+      {v:allTasks2.filter(t=>t.started&&!t.completed).length,l:"Devam",c:"var(--blue)",f:"devam"},
+      {v:allTasks2.filter(t=>t.completed).length,l:"Tamamlandı",c:"var(--green)",f:"tamamlandı"},
+      {v:allTasks2.filter(t=>isOD(t)).length,l:"Gecikmiş",c:"var(--red)",f:"gecikmiş"},
+    ].map(s=>`<div class="sp" onclick="setAdminFilter('${s.f}')" style="cursor:pointer;border:1px solid ${s.c}33;flex-shrink:0"><div class="spv" style="color:${s.c}">${s.v}</div><div class="spl">${s.l}</div></div>`).join("");
+  }
   let tasks=Object.values(allTasks);
   if(adminFilter==="bekliyor")tasks=tasks.filter(t=>!t.started&&!t.completed);
   else if(adminFilter==="devam")tasks=tasks.filter(t=>t.started&&!t.completed);
   else if(adminFilter==="tamamlandı")tasks=tasks.filter(t=>t.completed);
+  else if(adminFilter==="gecikmiş")tasks=tasks.filter(t=>isOD(t));
   else if(adminFilter.startsWith("u-"))tasks=tasks.filter(t=>t.assignedTo===adminFilter.replace("u-",""));
 
   const prio={yüksek:0,orta:1,düşük:2};
