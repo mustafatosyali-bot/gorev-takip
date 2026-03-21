@@ -295,6 +295,14 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <div style="padding:0 16px">
       <div class="sec-label">Hesap</div>
       <div class="card">
+        <div class="mi" onclick="askNotifPermission()">
+          <div class="mic" style="background:rgba(20,184,166,.12)"><svg width="18" height="18" fill="none" stroke="var(--teal)" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+          <div class="mil" id="notifPermLabel">Bildirimleri Aç</div><div class="mia">›</div>
+        </div>
+        <div class="mi" onclick="testNotifNow()">
+          <div class="mic" style="background:rgba(255,197,66,.12)"><svg width="18" height="18" fill="none" stroke="var(--yellow)" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+          <div class="mil">Test Bildirimi Gönder</div><div class="mia">›</div>
+        </div>
         <div class="mi" onclick="doLogout()">
           <div class="mic" style="background:rgba(255,77,109,.12)"><svg width="18" height="18" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
           <div class="mil" style="color:var(--red)">Çıkış Yap</div><div class="mia">›</div>
@@ -896,14 +904,11 @@ window.populateEmpSelect=function populateEmpSelect(){
   }
   const helpEl=document.getElementById("empHelp");
   if(helpEl)helpEl.style.display="none";
-  // Exclude self
-  const others=users.filter(u=>u.uid!==currentUser.uid);
-  if(!others.length&&users.length){
-    // Only self in users - show message
-    sel.innerHTML=`<option value="">— Başka personel henüz giriş yapmadı —</option>`;
-    return;
-  }
-  sel.innerHTML=(others.length?others:users).map(u=>{const n=u.name||u.email.split("@")[0];return`<option value="${u.uid}">${n} — ${u.email}</option>`;}).join("");
+  sel.innerHTML=users.map(u=>{
+    const n=u.name||u.email.split("@")[0];
+    const isSelf=u.uid===currentUser.uid;
+    return`<option value="${u.uid}">${n}${isSelf?" (Ben)":""} — ${u.email}</option>`;
+  }).join("");
 }
 
 window.openNewTaskSheet=()=>{
@@ -1046,6 +1051,7 @@ window.submitFinish=async()=>{
   cs("finishSheet");toast("Görev tamamlandı! ✓","green");
   const tName=allTasks[activeTaskId]?.title||"";
   sendNotification("✅ Görev Tamamlandı",`"${tName}" başarıyla tamamlandı!`);
+  sendInAppNotif("✅ Tamamlandı",`"${tName}" tamamlandı`,"green");
 };
 
 // ── UTILS ────────────────────────────────────────────────
@@ -1078,25 +1084,75 @@ if("serviceWorker"in navigator){
 async function requestNotifPermission(){
   if(!("Notification"in window))return false;
   if(Notification.permission==="granted")return true;
+  if(Notification.permission==="denied")return false;
   const p=await Notification.requestPermission();
   return p==="granted";
 }
 
-window.sendNotification=async function(title,body){
-  const ok=await requestNotifPermission();
-  if(!ok)return;
-  try{
-    const reg=await navigator.serviceWorker.ready;
-    reg.showNotification(title,{
-      body,
-      icon:"./icon-192.png",
-      badge:"./icon-192.png",
-      vibrate:[200,100,200],
-      tag:Date.now().toString(),
-    });
-  }catch(e){
-    new Notification(title,{body,icon:"./icon-192.png"});
+window.askNotifPermission=async function(){
+  if(!("Notification"in window)){
+    toast("Bu cihaz bildirimleri desteklemiyor","red");
+    return;
   }
+  if(Notification.permission==="granted"){
+    toast("Bildirimler zaten açık ✓","green");
+    updateNotifLabel();
+    return;
+  }
+  if(Notification.permission==="denied"){
+    toast("Bildirimler engellendi. Telefon Ayarları > Safari/Chrome > Bildirimler yolunu deneyin","red");
+    return;
+  }
+  const p=await Notification.requestPermission();
+  if(p==="granted"){
+    toast("Bildirimler açıldı! 🎉","green");
+    updateNotifLabel();
+    sendNotification("GörevTakip","Bildirimler başarıyla aktif!");
+  } else {
+    toast("Bildirim izni reddedildi","red");
+  }
+};
+
+window.testNotifNow=async function(){
+  if(Notification.permission!=="granted"){
+    await askNotifPermission();
+    return;
+  }
+  await sendNotification("🔔 Test Bildirimi","GörevTakip bildirimleri çalışıyor!");
+  toast("Test bildirimi gönderildi","blue");
+};
+
+function updateNotifLabel(){
+  const el=document.getElementById("notifPermLabel");
+  if(!el)return;
+  if(!("Notification"in window))el.textContent="Bildirim Desteklenmiyor";
+  else if(Notification.permission==="granted")el.textContent="Bildirimler Açık ✓";
+  else if(Notification.permission==="denied")el.textContent="Bildirimler Engellendi";
+  else el.textContent="Bildirimleri Aç";
+}
+
+window.sendNotification=async function(title,body){
+  if(!("Notification"in window))return;
+  try{
+    if(Notification.permission==="granted"){
+      // Try service worker first (Android), fallback to direct (iOS)
+      try{
+        const reg=await navigator.serviceWorker.ready;
+        await reg.showNotification(title,{
+          body,icon:"./icon-192.png",badge:"./icon-192.png",
+          vibrate:[200,100,200],tag:Date.now().toString()
+        });
+      }catch(e){
+        new Notification(title,{body,icon:"./icon-192.png"});
+      }
+    }
+  }catch(e){console.log("Notification error:",e);}
+};
+
+// Show in-app notification if system notification not available
+window.sendInAppNotif=function(title,body,type){
+  toast(title+": "+body,type||"blue");
+  addNotif(title,body,type==="green"?"green":type==="red"?"red":"blue");
 };
 
 // Check overdue tasks every minute
