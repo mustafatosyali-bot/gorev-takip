@@ -463,11 +463,15 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import{getDatabase,ref,set,push,onValue,remove,update,get}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged,sendPasswordResetEmail}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import{getMessaging,getToken,onMessage}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
 const FC={apiKey:"AIzaSyBXU1gjzp3f7FgIqO2QtRros4GxjM4iirE",authDomain:"gorev-takip-f68da.firebaseapp.com",databaseURL:"https://gorev-takip-f68da-default-rtdb.europe-west1.firebasedatabase.app",projectId:"gorev-takip-f68da",storageBucket:"gorev-takip-f68da.firebasestorage.app",messagingSenderId:"734379785103",appId:"1:734379785103:web:d1aef30462aadf63ede9fa"};
 const app=initializeApp(FC);
 const db=getDatabase(app);
 const auth=getAuth(app);
+let messaging=null;
+try{messaging=getMessaging(app);}catch(e){console.log("Messaging not supported:",e);}
+const VAPID_KEY="BOTdqD8XzraLlDwl37UKZ7EgLgT5zWlsa1RJNvUa0A_wZtFZn72_Pgcv0dasLkF5liEnMSEoyMrAAigzmM3NHhA";
 
 // ── ADMIN EMAIL ─────────────────────────────────────────
 // Yönetici e-postasını buraya yazın (küçük harf)
@@ -553,8 +557,13 @@ function showApp(){
   document.getElementById("loginScreen").classList.remove("show");
   const btn=document.getElementById("lBtn");if(btn){btn.textContent="Giriş Yap";btn.disabled=false;}
   updateUserUI();
-  // Request notification permission
-  setTimeout(()=>requestNotifPermission(),2000);
+  // Setup FCM
+  setTimeout(async()=>{
+    if(Notification.permission==="granted"){
+      await getFCMToken();
+    }
+    setupFCMListener();
+  },1000);
   if(isAdmin){
     document.getElementById("staffNav").style.display="none";
     document.getElementById("adminNav").style.display="flex";
@@ -1052,6 +1061,15 @@ window.submitFinish=async()=>{
   const tName=allTasks[activeTaskId]?.title||"";
   sendNotification("✅ Görev Tamamlandı",`"${tName}" başarıyla tamamlandı!`);
   sendInAppNotif("✅ Tamamlandı",`"${tName}" tamamlandı`,"green");
+  // Notify task assigner
+  const completedTask=allTasks[activeTaskId];
+  if(completedTask?.assignedBy&&completedTask.assignedBy!==currentUser.uid){
+    push(ref(db,`pushQueue/${completedTask.assignedBy}`),{
+      title:"✅ Görev Tamamlandı",
+      body:`${currentUser.displayName||currentUser.email.split("@")[0]}: "${tName}" tamamlandı!`,
+      ts:Date.now(),read:false
+    });
+  }
 };
 
 // ── UTILS ────────────────────────────────────────────────
@@ -1078,6 +1096,7 @@ window.toast=(msg,type="green")=>{
 
 if("serviceWorker"in navigator){
   navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  navigator.serviceWorker.register("./firebase-messaging-sw.js").catch(()=>{});
 }
 
 // ── NOTIFICATIONS ──────────────────────────────────────
@@ -1108,6 +1127,7 @@ window.askNotifPermission=async function(){
     toast("Bildirimler açıldı! 🎉","green");
     updateNotifLabel();
     sendNotification("GörevTakip","Bildirimler başarıyla aktif!");
+    getFCMToken();
   } else {
     toast("Bildirim izni reddedildi","red");
   }
@@ -1131,11 +1151,43 @@ function updateNotifLabel(){
   else el.textContent="Bildirimleri Aç";
 }
 
+// ── FCM TOKEN MANAGEMENT ─────────────────────────────────
+async function getFCMToken(){
+  if(!messaging)return null;
+  try{
+    const token=await getToken(messaging,{vapidKey:VAPID_KEY});
+    if(token&&currentUser){
+      // Save token to Firebase for this user
+      await set(ref(db,`fcmTokens/${currentUser.uid}`),{
+        token,
+        updatedAt:Date.now(),
+        email:currentUser.email
+      });
+      console.log("FCM token saved");
+    }
+    return token;
+  }catch(e){
+    console.log("FCM token error:",e);
+    return null;
+  }
+}
+
+// Listen for foreground messages
+function setupFCMListener(){
+  if(!messaging)return;
+  onMessage(messaging,(payload)=>{
+    console.log("Foreground message:",payload);
+    const title=payload.notification?.title||"GörevTakip";
+    const body=payload.notification?.body||"";
+    toast(title+": "+body,"blue");
+    addNotif(title,body,"blue");
+  });
+}
+
 window.sendNotification=async function(title,body){
   if(!("Notification"in window))return;
   try{
     if(Notification.permission==="granted"){
-      // Try service worker first (Android), fallback to direct (iOS)
       try{
         const reg=await navigator.serviceWorker.ready;
         await reg.showNotification(title,{
