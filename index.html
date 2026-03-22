@@ -17,7 +17,7 @@
 <style>
 :root{--bg:#0a0a0f;--card:#13131a;--card2:#1c1c26;--border:#252535;--accent:#ff6b35;--ag:rgba(255,107,53,0.15);--blue:#4f8fff;--green:#22d47c;--yellow:#ffc542;--red:#ff4d6d;--purple:#b06dff;--teal:#14b8a6;--text:#f0f0f8;--text2:#8888aa;--text3:#55556a;--nh:72px;--sb:env(safe-area-inset-bottom,0px);--st:env(safe-area-inset-top,0px)}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overscroll-behavior:none}
+html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overscroll-behavior:none;scroll-padding-bottom:160px}
 
 /* SPLASH */
 #splash{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;transition:opacity .4s}
@@ -47,7 +47,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 /* LAYOUT */
 .screen{position:absolute;inset:0;padding-top:var(--st);display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s,transform .2s;overflow:hidden}
 .screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
-.sa{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nh) + var(--sb) + 80px)}
+.sa{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nh) + var(--sb) + 180px);scroll-padding-bottom:160px}
 .sa-nofab{padding-bottom:calc(var(--nh) + var(--sb) + 8px)}
 
 /* TOPBAR */
@@ -242,6 +242,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   <div class="ss" id="staffStats"></div>
   <div class="sa" style="padding:0 16px;">
     <div id="staffTaskList" style="padding-top:4px;padding-bottom:8px;"></div>
+    <div style="height:120px;flex-shrink:0;"></div>
   </div>
 </div>
 
@@ -277,6 +278,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   <div style="display:flex;gap:8px;padding:4px 16px 10px;overflow-x:auto;scrollbar-width:none;flex-shrink:0" id="adminFilters"></div>
   <div class="sa" style="padding:0 16px;">
     <div id="adminTaskList" style="padding-top:4px;"></div>
+    <div style="height:120px;flex-shrink:0;"></div>
   </div>
 </div>
 
