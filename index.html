@@ -47,7 +47,7 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
 /* LAYOUT */
 .screen{position:absolute;inset:0;padding-top:var(--st);display:flex;flex-direction:column;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s,transform .2s;overflow:hidden}
 .screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
-.sa{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nh) + var(--sb) + 20px)}
+.sa{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nh) + var(--sb) + 80px)}
 .sa-nofab{padding-bottom:calc(var(--nh) + var(--sb) + 8px)}
 
 /* TOPBAR */
@@ -633,6 +633,30 @@ window.doLogout=async()=>{if(!confirm("Çıkış yapmak istiyor musunuz?"))retur
 let taskRef=null,userRef=null;
 function startListeners(){
   if(!currentUser)return;
+  const uid=currentUser.uid;
+
+  // Bildirim kuyruğunu dinle
+  let pqInit=false;
+  const pqRef=ref(db,"pushQueue/"+uid);
+  onValue(pqRef,snap=>{
+    const q=snap.val();
+    if(!q){pqInit=true;return;}
+    Object.entries(q).forEach(function(entry){
+      const k=entry[0], item=entry[1];
+      if(!item.read){
+        if(pqInit){
+          toast(item.title+": "+item.body,"blue");
+          if(window.Notification&&Notification.permission==="granted"){
+            try{new Notification(item.title,{body:item.body,icon:"./icon-192.png"});}catch(e){}
+          }
+        }
+        addNotif(item.title,item.body,"blue");
+        update(ref(db,"pushQueue/"+uid+"/"+k),{read:true}).catch(function(){});
+      }
+    });
+    pqInit=true;
+  });
+
   // Tüm görevleri dinle (admin: hepsini, personel: sadece kendininkini)
   taskRef=ref(db,"tasks");
   onValue(taskRef,s=>{
@@ -979,7 +1003,20 @@ window.saveNewTask=async()=>{
     createdAt:Date.now(),
     photos:[],
   });
-  cs("newTaskSheet");toast("Görev atandı ✓","green");
+  cs("newTaskSheet");
+  toast("Görev atandı ✓","green");
+  // Send notification to assignee
+  const assignedUser=Object.values(allUsers).find(u=>u.uid===data.assignedTo);
+  const myName=currentUser.displayName||(currentUser.email.split("@")[0]);
+  const taskTitle=data.title;
+  // In-app + push queue notification
+  sendInAppNotif("📋 Yeni Görev",`${myName}: "${taskTitle}"` ,"blue");
+  // Write to push queue so assignee sees it when they open app
+  push(ref(db,`pushQueue/${data.assignedTo}`),{
+    title:"📋 Yeni Görev Atandı",
+    body:`${myName} size "${taskTitle}" görevini atadı.`,
+    ts:Date.now(),read:false
+  });
 };
 
 // ── START TASK (STAFF) ────────────────────────────────────
@@ -1057,7 +1094,30 @@ window.submitFinish=async()=>{
   const answers={};
   qs.forEach((q,i)=>{answers[q]=document.getElementById(`eqA${i}`).value.trim();});
   await update(ref(db,`tasks/${activeTaskId}`),{completed:true,completedAt:Date.now(),endAnswers:answers,photos:finishPhotos});
-  cs("finishSheet");toast("Görev tamamlandı! ✓","green");
+  cs("finishSheet");
+  toast("Görev tamamlandı! ✓","green");
+  const finTask=allTasks[activeTaskId];
+  const finName=currentUser.displayName||(currentUser.email.split("@")[0]);
+  if(finTask){
+    sendInAppNotif("✅ Tamamlandı",`"${finTask.title}" tamamlandı`,"green");
+    // Notify assigner if different person
+    if(finTask.assignedBy&&finTask.assignedBy!==currentUser.uid){
+      push(ref(db,`pushQueue/${finTask.assignedBy}`),{
+        title:"✅ Görev Tamamlandı",
+        body:`${finName}: "${finTask.title}" tamamlandı!`,
+        ts:Date.now(),read:false
+      });
+    }
+    // Also notify admin
+    const adminUsers=Object.values(allUsers).filter(u=>u.isAdmin&&u.uid!==currentUser.uid);
+    adminUsers.forEach(admin=>{
+      push(ref(db,`pushQueue/${admin.uid}`),{
+        title:"✅ Görev Tamamlandı",
+        body:`${finName}: "${finTask.title}" tamamlandı!`,
+        ts:Date.now(),read:false
+      });
+    });
+  }
   const tName=allTasks[activeTaskId]?.title||"";
   sendNotification("✅ Görev Tamamlandı",`"${tName}" başarıyla tamamlandı!`);
   sendInAppNotif("✅ Tamamlandı",`"${tName}" tamamlandı`,"green");
@@ -1203,8 +1263,15 @@ window.sendNotification=async function(title,body){
 
 // Show in-app notification if system notification not available
 window.sendInAppNotif=function(title,body,type){
-  toast(title+": "+body,type||"blue");
-  addNotif(title,body,type==="green"?"green":type==="red"?"red":"blue");
+  const t=type||"blue";
+  toast(title+": "+body,t);
+  addNotif(title,body,t==="green"?"green":t==="red"?"red":"blue");
+  // Also try system notification
+  if(Notification&&Notification.permission==="granted"){
+    try{
+      new Notification(title,{body,icon:"./icon-192.png"});
+    }catch(e){}
+  }
 };
 
 // Check overdue tasks every minute
