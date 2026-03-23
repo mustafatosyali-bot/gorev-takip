@@ -664,7 +664,10 @@ function startListeners(){
   onValue(taskRef,s=>{
     allTasks=s.val()||{};
     sync();
-    if(isAdmin){renderAdmin();}else{renderStaff();if(document.getElementById("sc-assigned").classList.contains("active"))renderAssigned();}
+    if(isAdmin){renderAdmin();}else{
+      renderStaff();
+      if(document.getElementById("sc-assigned")&&document.getElementById("sc-assigned").classList.contains("active"))renderAssigned();
+    }
   });
   // Kullanıcı listesi (admin için)
   userRef=ref(db,"users");
@@ -757,6 +760,7 @@ window.renderStaff=function renderStaff(){
 // ── RENDER ASSIGNED (by staff) ───────────────────────────
 window.renderAssigned=function renderAssigned(){
   if(!currentUser||isAdmin)return;
+  // Benim oluşturduğum tüm görevler (kendime atadıklarım dahil)
   const myAssigned=Object.values(allTasks).filter(t=>t.assignedBy===currentUser.uid);
   
   // Stats
@@ -1151,8 +1155,19 @@ window.switchScreen=name=>{
   document.querySelectorAll(".ni").forEach(n=>n.classList.remove("active"));
   const sc=document.getElementById("sc-"+name.replace("sc-",""));
   if(sc)sc.classList.add("active");
-  const navId="nav-"+(name==="sc-admin"?"admin":name==="sc-profile"?(isAdmin?"aprofile":"profile"):"tasks");
+  // Nav highlight
+  let navId;
+  if(name==="sc-admin")navId="nav-admin";
+  else if(name==="sc-assigned")navId="nav-assigned";
+  else if(name==="sc-profile")navId=isAdmin?"nav-aprofile":"nav-profile";
+  else navId="nav-tasks";
   const navEl=document.getElementById(navId);if(navEl)navEl.classList.add("active");
+  // Render correct content
+  if(name==="sc-assigned")renderAssigned();
+  if(name==="sc-profile")typeof updateNotifLabel==="function"&&updateNotifLabel();
+  // FAB visibility
+  const fab=document.getElementById("fab");
+  if(fab)fab.style.display=(name==="sc-tasks"||name==="sc-assigned"||name==="sc-admin")?"flex":"none";
 };
 
 window.os=id=>document.getElementById(id).classList.add("open");
