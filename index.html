@@ -686,8 +686,11 @@ async function saveCurrentUser(){
 // ── RENDER STAFF ──────────────────────────────────────────
 window.renderStaff=function renderStaff(){
   if(!currentUser)return;
-  let myTasks=Object.values(allTasks).filter(t=>t.assignedTo===currentUser.uid);
-  const allMyTasks=myTasks;
+  // Bana atanan + benim attığım görevler (kendime atadıklarım hariç)
+  const assignedToMe=Object.values(allTasks).filter(t=>t.assignedTo===currentUser.uid);
+  const assignedByMe=Object.values(allTasks).filter(t=>t.assignedBy===currentUser.uid&&t.assignedTo!==currentUser.uid);
+  const allMyTasks=[...assignedToMe,...assignedByMe.filter(t=>!assignedToMe.find(x=>x.id===t.id))];
+  let myTasks=[...allMyTasks];
   if(staffFilter==="bekliyor") myTasks=myTasks.filter(t=>!t.started&&!t.completed);
   else if(staffFilter==="devam") myTasks=myTasks.filter(t=>t.started&&!t.completed);
   else if(staffFilter==="tamamlandı") myTasks=myTasks.filter(t=>t.completed);
@@ -718,17 +721,21 @@ window.renderStaff=function renderStaff(){
   list.innerHTML=myTasks.map(t=>{
     const p=pct(t);
     const ov=isOD(t);
-    return `<div class="tk">
+    const isAssignedByMe=t.assignedBy===currentUser.uid&&t.assignedTo!==currentUser.uid;
+    const assignee=isAssignedByMe?Object.values(allUsers).find(u=>u.uid===t.assignedTo):null;
+    const assigneeName=assignee?(assignee.name||assignee.email.split("@")[0]):"";
+    return `<div class="tk" style="${isAssignedByMe?"border-left:3px solid var(--teal)":""}">
       <div class="tk-header">
         <div class="tk-status-dot" style="background:${stColor(t)}"></div>
         <div class="tk-body">
           <div class="tk-title" style="${t.completed?"text-decoration:line-through;opacity:.5":""}">${t.title}</div>
+          ${isAssignedByMe?`<div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:4px">📤 ${assigneeName} için atadım</div>`:""}
           <div class="tk-meta">
             <span class="chip ${priC[t.priority]}">${t.priority}</span>
             <span class="chip ${stChip(t)}">${stLabel(t)}</span>
             ${t.due?`<span class="chip cgr" style="${ov?"color:var(--red)":""}">${fd(t.due)}${ov?" ⚠":""}</span>`:""}
           </div>
-          ${(()=>{const assigner=Object.values(allUsers).find(u=>u.uid===t.assignedBy);const aname=assigner?(assigner.name||assigner.email.split("@")[0]):"";return aname?`<div style="font-size:11px;color:var(--text3);margin-top:4px">👤 ${aname} tarafından atandı</div>`:""})()}
+          ${(()=>{const assigner=Object.values(allUsers).find(u=>u.uid===t.assignedBy);const aname=assigner?(assigner.name||assigner.email.split("@")[0]):"";return (!isAssignedByMe&&aname)?`<div style="font-size:11px;color:var(--text3);margin-top:4px">👤 ${aname} tarafından atandı</div>`:""})()}
         </div>
       </div>
       ${t.desc?`<div style="padding:0 16px 10px;font-size:13px;color:var(--text2);line-height:1.5">${t.desc}</div>`:""}
@@ -737,9 +744,11 @@ window.renderStaff=function renderStaff(){
         <div class="prog-bar"><div class="prog-fill" style="width:${p}%"></div></div>
       </div>
       <div class="tk-actions">
-        ${!t.started&&!t.completed?`<button class="btn btp" onclick="openStart('${t.id}')">🚀 Başlat</button>`
+        ${isAssignedByMe
+          ?`<button class="btn bts" onclick="openDetail('${t.id}')">📊 Detayı Gör</button>`
+          :(!t.started&&!t.completed?`<button class="btn btp" onclick="openStart('${t.id}')">🚀 Başlat</button>`
           :t.started&&!t.completed?`<button class="btn" style="background:var(--green);color:white" onclick="openFinish('${t.id}')">✓ Tamamla</button>`
-          :`<button class="btn bts" disabled style="opacity:.5">✓ Tamamlandı</button>`}
+          :`<button class="btn bts" disabled style="opacity:.5">✓ Tamamlandı</button>`)}
       </div>
     </div>`;
   }).join("");
@@ -748,7 +757,7 @@ window.renderStaff=function renderStaff(){
 // ── RENDER ASSIGNED (by staff) ───────────────────────────
 window.renderAssigned=function renderAssigned(){
   if(!currentUser||isAdmin)return;
-  const myAssigned=Object.values(allTasks).filter(t=>t.assignedBy===currentUser.uid&&t.assignedTo!==currentUser.uid);
+  const myAssigned=Object.values(allTasks).filter(t=>t.assignedBy===currentUser.uid);
   
   // Stats
   const done=myAssigned.filter(t=>t.completed).length;
