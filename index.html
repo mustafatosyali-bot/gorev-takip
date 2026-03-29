@@ -319,6 +319,25 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   </div>
 </div>
 
+<!-- ══════════ RAPORLAR ══════════ -->
+<div class="screen" id="sc-reports">
+  <div class="tb">
+    <div class="tb-logo"><img src="data:image/png;base64,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" id="reportsLogo" alt="MATEplast"></div>
+    <div class="tb-right">
+      <button onclick="generateReport()" style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;padding:8px 14px;border-radius:10px;background:var(--teal);border:none;color:#0a0a0f;cursor:pointer">📊 Rapor Oluştur</button>
+    </div>
+  </div>
+  <!-- REPORT TABS -->
+  <div style="display:flex;gap:8px;padding:8px 16px;flex-shrink:0;border-bottom:1px solid var(--border)">
+    <button id="rtab-daily" onclick="setReportTab('daily')" style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;padding:8px 16px;border-radius:10px;border:none;background:var(--teal);color:#0a0a0f;cursor:pointer;flex:1">Günlük</button>
+    <button id="rtab-weekly" onclick="setReportTab('weekly')" style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;padding:8px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;flex:1">Haftalık</button>
+    <button id="rtab-all" onclick="setReportTab('all')" style="font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;padding:8px 16px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;flex:1">Tüm Zamanlar</button>
+  </div>
+  <div class="sa sa-nofab" id="reportContent" style="padding:16px">
+    <div class="empty"><h3>Rapor yükleniyor...</h3></div>
+  </div>
+</div>
+
 <!-- INSTALL BANNER -->
 <div id="installBanner" style="display:none;position:fixed;bottom:calc(var(--nh) + var(--sb) + 12px);left:16px;right:76px;background:var(--card);border:1px solid var(--teal);border-radius:14px;padding:12px 14px;display:none;align-items:center;gap:10px;z-index:48;box-shadow:0 4px 20px rgba(20,184,166,.2)">
   <div style="font-size:18px">📱</div>
@@ -340,6 +359,10 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
     <div class="nic"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
     <div class="nil">Atadıklarım</div><div class="nbadge" id="abt2"></div>
   </div>
+  <div class="ni" id="nav-sreports" onclick="switchScreen('sc-reports')">
+    <div class="nic"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+    <div class="nil">Raporlar</div>
+  </div>
   <div class="ni" id="nav-profile" onclick="switchScreen('sc-profile')">
     <div class="nic"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></div>
     <div class="nil">Profil</div>
@@ -351,6 +374,10 @@ html,body{height:100%;overflow:hidden;font-family:'DM Sans',sans-serif;backgroun
   <div class="ni tadmin active" id="nav-admin" onclick="switchScreen('sc-admin')">
     <div class="nic"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
     <div class="nil">Görevler</div><div class="nbadge" id="abt"></div>
+  </div>
+  <div class="ni tadmin" id="nav-reports" onclick="switchScreen('sc-reports')">
+    <div class="nic"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+    <div class="nil">Raporlar</div>
   </div>
   <div class="ni tadmin" id="nav-aprofile" onclick="switchScreen('sc-profile')">
     <div class="nic"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg></div>
@@ -1193,9 +1220,15 @@ window.switchScreen=name=>{
   // Render correct content
   if(name==="sc-assigned")renderAssigned();
   if(name==="sc-profile")typeof updateNotifLabel==="function"&&updateNotifLabel();
+  if(name==="sc-reports")renderReport();
   // FAB visibility
   const fab=document.getElementById("fab");
   if(fab)fab.style.display=(name==="sc-tasks"||name==="sc-assigned"||name==="sc-admin")?"flex":"none";
+  // Nav highlight fix for reports
+  if(name==="sc-reports"){
+    const rn1=document.getElementById("nav-reports");if(rn1)rn1.classList.add("active");
+    const rn2=document.getElementById("nav-sreports");if(rn2)rn2.classList.add("active");
+  }
 };
 
 window.os=id=>document.getElementById(id).classList.add("open");
@@ -1207,6 +1240,191 @@ window.toast=(msg,type="green")=>{
   const el=document.createElement("div");el.className=`ti2 t${type[0]}`;el.innerHTML=(ic[type]||ic.blue)+msg;
   document.getElementById("tw").appendChild(el);setTimeout(()=>el.remove(),3200);
 };
+
+// ── REPORTS ────────────────────────────────────────────────
+let reportTab="daily";
+
+window.setReportTab=function(tab){
+  reportTab=tab;
+  ["daily","weekly","all"].forEach(t=>{
+    const el=document.getElementById("rtab-"+t);
+    if(!el)return;
+    if(t===tab){el.style.background="var(--teal)";el.style.color="#0a0a0f";el.style.border="none";}
+    else{el.style.background="transparent";el.style.color="var(--text2)";el.style.border="1px solid var(--border)";}
+  });
+  renderReport();
+};
+
+window.generateReport=async function(){
+  // Save report to Firebase so everyone can see it
+  const report=buildReportData();
+  await set(ref(db,"reports/"+Date.now()),{
+    ...report,
+    generatedBy:currentUser.uid,
+    generatedAt:Date.now(),
+  });
+  toast("Rapor oluşturuldu ve kaydedildi ✓","green");
+  renderReport();
+};
+
+function buildReportData(){
+  const now=new Date();
+  const todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  const weekStart=todayStart-6*24*60*60*1000;
+  
+  const allT=Object.values(allTasks);
+  let filtered=allT;
+  let period="Tüm Zamanlar";
+  
+  if(reportTab==="daily"){
+    filtered=allT.filter(t=>t.completedAt>=todayStart||t.createdAt>=todayStart);
+    period=now.toLocaleDateString("tr-TR",{day:"2-digit",month:"long",year:"numeric"});
+  } else if(reportTab==="weekly"){
+    filtered=allT.filter(t=>t.completedAt>=weekStart||t.createdAt>=weekStart);
+    period="Son 7 Gün";
+  }
+  
+  return {period,tasks:filtered,tab:reportTab};
+}
+
+function renderReport(){
+  const el=document.getElementById("reportContent");
+  if(!el)return;
+  
+  const now=new Date();
+  const todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  const weekStart=todayStart-6*24*60*60*1000;
+  const allT=Object.values(allTasks);
+  
+  let filtered=allT;
+  let period="Tüm Zamanlar";
+  
+  if(reportTab==="daily"){
+    filtered=allT.filter(t=>(t.completedAt&&t.completedAt>=todayStart)||(t.createdAt&&t.createdAt>=todayStart));
+    period=now.toLocaleDateString("tr-TR",{day:"2-digit",month:"long",year:"numeric"});
+  } else if(reportTab==="weekly"){
+    filtered=allT.filter(t=>(t.completedAt&&t.completedAt>=weekStart)||(t.createdAt&&t.createdAt>=weekStart));
+    period="Son 7 Gün ("+new Date(weekStart).toLocaleDateString("tr-TR",{day:"2-digit",month:"short"})+" - "+now.toLocaleDateString("tr-TR",{day:"2-digit",month:"short"})+")";
+  }
+
+  // Filter by current user if not admin
+  if(!isAdmin){
+    filtered=filtered.filter(t=>t.assignedTo===currentUser.uid||t.assignedBy===currentUser.uid);
+  }
+
+  const total=filtered.length;
+  const done=filtered.filter(t=>t.completed).length;
+  const inprog=filtered.filter(t=>t.started&&!t.completed).length;
+  const waiting=filtered.filter(t=>!t.started&&!t.completed).length;
+  const overdue=filtered.filter(t=>isOD(t)).length;
+  const pct=total?Math.round(done/total*100):0;
+
+  // Per person stats
+  const personStats={};
+  filtered.forEach(t=>{
+    const u=Object.values(allUsers).find(x=>x.uid===t.assignedTo);
+    const name=u?(u.name||u.email.split("@")[0]):"Bilinmiyor";
+    if(!personStats[name])personStats[name]={total:0,done:0,inprog:0,waiting:0,overdue:0};
+    personStats[name].total++;
+    if(t.completed)personStats[name].done++;
+    else if(t.started)personStats[name].inprog++;
+    else personStats[name].waiting++;
+    if(isOD(t))personStats[name].overdue++;
+  });
+
+  const personRows=Object.entries(personStats).sort((a,b)=>b[1].done-a[1].done).map(([name,s])=>{
+    const p=s.total?Math.round(s.done/s.total*100):0;
+    return `<div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:14px;font-weight:600">${name}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--teal)">${p}%</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        <span class="chip cg">${s.done} tamamlandı</span>
+        <span class="chip cb">${s.inprog} devam</span>
+        <span class="chip cp">${s.waiting} bekliyor</span>
+        ${s.overdue?`<span class="chip cr">${s.overdue} gecikmiş</span>`:""}
+      </div>
+      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+        <div style="height:100%;width:${p}%;background:linear-gradient(90deg,var(--teal),var(--blue));border-radius:2px;transition:width .4s"></div>
+      </div>
+    </div>`;
+  }).join("");
+
+  // Task details
+  const taskDetails=filtered.map(t=>{
+    const u=Object.values(allUsers).find(x=>x.uid===t.assignedTo);
+    const name=u?(u.name||u.email.split("@")[0]):"?";
+    const assigner=Object.values(allUsers).find(x=>x.uid===t.assignedBy);
+    const assignerName=assigner?(assigner.name||assigner.email.split("@")[0]):"?";
+    const hasAnswers=(t.startAnswers&&Object.keys(t.startAnswers).length)||(t.endAnswers&&Object.keys(t.endAnswers).length);
+    
+    return `<div style="padding:12px 16px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div style="width:8px;height:8px;border-radius:50%;background:${t.completed?"var(--green)":t.started?"var(--blue)":"var(--text3)"}"></div>
+        <div style="font-size:14px;font-weight:600;flex:1">${t.title}</div>
+        <span class="chip ${t.completed?"cg":t.started?"cb":"cp"}" style="font-size:9px">${t.completed?"Tamamlandı":t.started?"Devam":"Bekliyor"}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-left:16px">
+        👤 ${name} &nbsp;•&nbsp; ✏️ ${assignerName}
+        ${t.due?` &nbsp;•&nbsp; 📅 ${fd(t.due)}`:""}
+      </div>
+      ${hasAnswers?`<div style="margin-top:8px;margin-left:16px;padding:8px;background:var(--card2);border-radius:8px">
+        ${t.startAnswers?Object.entries(t.startAnswers).map(([q,a])=>`<div style="font-size:11px;color:var(--text2);margin-bottom:2px"><strong>🚀 ${q}:</strong> ${a}</div>`).join(""):""}
+        ${t.endAnswers?Object.entries(t.endAnswers).map(([q,a])=>`<div style="font-size:11px;color:var(--text2);margin-bottom:2px"><strong>✅ ${q}:</strong> ${a}</div>`).join(""):""}
+      </div>`:""}
+    </div>`;
+  }).join("");
+
+  el.innerHTML=`
+    <!-- BAŞLIK -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">DÖNEM</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:16px">${period}</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+        <div style="text-align:center;padding:10px;background:var(--card2);border-radius:10px">
+          <div style="font-family:'DM Mono',monospace;font-size:22px;color:var(--accent)">${total}</div>
+          <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Toplam</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:var(--card2);border-radius:10px">
+          <div style="font-family:'DM Mono',monospace;font-size:22px;color:var(--green)">${done}</div>
+          <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Tamamlandı</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:var(--card2);border-radius:10px">
+          <div style="font-family:'DM Mono',monospace;font-size:22px;color:var(--blue)">${inprog}</div>
+          <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Devam</div>
+        </div>
+        <div style="text-align:center;padding:10px;background:var(--card2);border-radius:10px">
+          <div style="font-family:'DM Mono',monospace;font-size:22px;color:var(--red)">${overdue}</div>
+          <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Gecikmiş</div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px">
+          <span>Genel Tamamlanma</span><span style="color:var(--teal);font-weight:700">${pct}%</span>
+        </div>
+        <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--teal),var(--blue));border-radius:3px;transition:width .5s"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KİŞİ BAZINDA -->
+    ${isAdmin&&Object.keys(personStats).length?`
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">KİŞİ BAZINDA PERFORMANS</div>
+    <div class="card" style="margin-bottom:16px">${personRows}</div>`:""}
+
+    <!-- GÖREV DETAYLARI -->
+    ${filtered.length?`
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">GÖREV DETAYLARI (${filtered.length})</div>
+    <div class="card" style="margin-bottom:16px">${taskDetails}</div>`:`<div class="empty"><h3>Bu dönemde görev yok</h3></div>`}
+
+    <!-- SON GÜNCELLEME -->
+    <div style="text-align:center;font-size:11px;color:var(--text3);padding:8px 0">
+      Son güncelleme: ${new Date().toLocaleTimeString("tr-TR")}
+    </div>
+  `;
+}
 
 if("serviceWorker"in navigator){
   navigator.serviceWorker.register("./sw.js").catch(()=>{});
