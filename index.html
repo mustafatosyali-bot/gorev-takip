@@ -1256,15 +1256,121 @@ window.setReportTab=function(tab){
 };
 
 window.generateReport=async function(){
-  // Save report to Firebase so everyone can see it
-  const report=buildReportData();
-  await set(ref(db,"reports/"+Date.now()),{
-    ...report,
-    generatedBy:currentUser.uid,
-    generatedAt:Date.now(),
+  const now=new Date();
+  const todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  const weekStart=todayStart-6*24*60*60*1000;
+  const allT=Object.values(allTasks);
+  let filtered=allT;
+  let period="Tüm Zamanlar";
+  if(reportTab==="daily"){filtered=allT.filter(t=>(t.completedAt&&t.completedAt>=todayStart)||(t.createdAt&&t.createdAt>=todayStart));period=now.toLocaleDateString("tr-TR",{day:"2-digit",month:"long",year:"numeric"});}
+  else if(reportTab==="weekly"){filtered=allT.filter(t=>(t.completedAt&&t.completedAt>=weekStart)||(t.createdAt&&t.createdAt>=weekStart));period="Son 7 Gün";}
+  if(!isAdmin)filtered=filtered.filter(t=>t.assignedTo===currentUser.uid||t.assignedBy===currentUser.uid);
+
+  const total=filtered.length;
+  const done=filtered.filter(t=>t.completed).length;
+  const inprog=filtered.filter(t=>t.started&&!t.completed).length;
+  const waiting=filtered.filter(t=>!t.started&&!t.completed).length;
+  const overdue=filtered.filter(t=>isOD(t)).length;
+  const pct=total?Math.round(done/total*100):0;
+
+  // Kişi bazında
+  const ps={};
+  filtered.forEach(t=>{
+    const u=Object.values(allUsers).find(x=>x.uid===t.assignedTo);
+    const name=u?(u.name||u.email.split("@")[0]):"Bilinmiyor";
+    if(!ps[name])ps[name]={total:0,done:0,inprog:0,waiting:0,overdue:0};
+    ps[name].total++;
+    if(t.completed)ps[name].done++;
+    else if(t.started)ps[name].inprog++;
+    else ps[name].waiting++;
+    if(isOD(t))ps[name].overdue++;
   });
-  toast("Rapor oluşturuldu ve kaydedildi ✓","green");
-  renderReport();
+
+  // Metin raporu oluştur
+  let txt="";
+  txt+="📊 MATEplast Görev Raporu\n";
+  txt+="━━━━━━━━━━━━━━━━━━━━━━\n";
+  txt+="📅 Dönem: "+period+"\n";
+  txt+="🕐 "+now.toLocaleString("tr-TR")+"\n\n";
+  txt+="📈 ÖZET\n";
+  txt+="• Toplam Görev: "+total+"\n";
+  txt+="• Tamamlanan: "+done+" ("+pct+"%)\n";
+  txt+="• Devam Eden: "+inprog+"\n";
+  txt+="• Bekleyen: "+waiting+"\n";
+  txt+="• Gecikmiş: "+overdue+"\n\n";
+
+  if(Object.keys(ps).length>1){
+    txt+="👥 KİŞİ BAZINDA\n";
+    Object.entries(ps).sort((a,b)=>b[1].done-a[1].done).forEach(([name,s])=>{
+      const p=s.total?Math.round(s.done/s.total*100):0;
+      txt+="• "+name+": "+s.done+"/"+s.total+" tamamlandı ("+p+"%)";
+      if(s.overdue)txt+=" ⚠️"+s.overdue+" gecikmiş";
+      txt+="\n";
+    });
+    txt+="\n";
+  }
+
+  txt+="📋 GÖREVLER\n";
+  filtered.forEach(t=>{
+    const u=Object.values(allUsers).find(x=>x.uid===t.assignedTo);
+    const name=u?(u.name||u.email.split("@")[0]):"?";
+    const status=t.completed?"✅":t.started?"🔄":"⏳";
+    txt+=status+" "+t.title+" → "+name;
+    if(t.due)txt+=" ("+fd(t.due)+")";
+    if(isOD(t))txt+=" ⚠️";
+    txt+="\n";
+    // Cevaplar
+    if(t.startAnswers){Object.entries(t.startAnswers).forEach(([q,a])=>{if(a)txt+="   🚀 "+q+": "+a+"\n";});}
+    if(t.endAnswers){Object.entries(t.endAnswers).forEach(([q,a])=>{if(a)txt+="   ✅ "+q+": "+a+"\n";});}
+  });
+
+  txt+="\n━━━━━━━━━━━━━━━━━━━━━━\n";
+  txt+="MATEplast Görev Takip Sistemi";
+
+  // Paylaşım seçenekleri göster
+  showShareSheet(txt, period);
+};
+
+function showShareSheet(text, period){
+  const overlay=document.createElement("div");
+  overlay.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:flex-end;justify-content:center";
+  overlay.innerHTML=`
+    <div style="background:var(--card);border-radius:24px 24px 0 0;padding:20px;width:100%;max-width:600px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px)">
+      <div style="width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px"></div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:4px">📊 Rapor Hazır</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:20px">${period}</div>
+      <div style="background:var(--bg);border-radius:12px;padding:14px;font-size:12px;font-family:'DM Mono',monospace;color:var(--text2);white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-bottom:16px;line-height:1.6">${text}</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button onclick="copyReport()" style="font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;padding:14px;border-radius:14px;border:none;background:var(--teal);color:#0a0a0f;cursor:pointer;width:100%">📋 Panoya Kopyala</button>
+        <button onclick="shareReport()" style="font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;padding:14px;border-radius:14px;border:1px solid var(--border);background:var(--card2);color:var(--text);cursor:pointer;width:100%">📤 Paylaş (WhatsApp vb.)</button>
+        <button onclick="this.closest('[style*=fixed]').remove()" style="font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;padding:12px;border-radius:14px;border:none;background:transparent;color:var(--text2);cursor:pointer;width:100%">Kapat</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.onclick=e=>{if(e.target===overlay)overlay.remove();};
+  window._reportText=text;
+
+  window.copyReport=function(){
+    navigator.clipboard.writeText(window._reportText).then(()=>{
+      toast("Rapor kopyalandı! ✓","green");
+    }).catch(()=>{
+      // Fallback
+      const ta=document.createElement("textarea");
+      ta.value=window._reportText;
+      document.body.appendChild(ta);ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      toast("Rapor kopyalandı! ✓","green");
+    });
+  };
+
+  window.shareReport=function(){
+    if(navigator.share){
+      navigator.share({title:"MATEplast Görev Raporu",text:window._reportText}).catch(()=>{});
+    } else {
+      navigator.clipboard.writeText(window._reportText).then(()=>toast("Kopyalandı, WhatsApp'a yapıştırın","blue"));
+    }
+  };
 };
 
 function buildReportData(){
